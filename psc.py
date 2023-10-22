@@ -7,6 +7,7 @@ import torch.nn.functional as F
 from sklearn.cluster import KMeans
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import adjusted_mutual_info_score, adjusted_rand_score
+from scipy import linalg
 from scipy.spatial.distance import cdist
 import random
 import pickle
@@ -244,7 +245,7 @@ class PSC:
     """
     def __init__(
         self, 
-        n_neighbor = 10, 
+        n_neighbor = 8, 
         sigma = 1, 
         k = 10, 
         model = Four_layer_FNN(64, 128, 256, 64, 10),
@@ -274,17 +275,16 @@ class PSC:
 
         for i in range(X.shape[0]):
             S[i, neighbor_index[i]] = np.exp(-dist[i, neighbor_index[i]] / (2 * self.sigma ** 2))
+
         S = np.maximum(S, S.T)
-        
         D = np.diag(np.sum(S, axis = 1))
         L = D - S
         D_tmp = np.linalg.inv(D) ** (1 / 2)
         L_sym = np.dot(np.dot(D_tmp, L), D_tmp)
-        del D_tmp
         A,B=np.linalg.eig(L_sym)
         idx=np.argsort(A)[:self.k]
         U=B[:,idx]
-        U=U/np.sqrt(np.sum(U ** 2, axis=1))[:, None]
+        U=U/((np.sum(U**2,axis=1)**0.5)[:,None])
         return U
 
 
@@ -412,6 +412,9 @@ class PSC:
         """
         U = self.training_psc_model(X)
 
+        print(U.size)
+        print(U.shape)
+
         if hasattr(self.clustering, "fit_predict") is False:
             raise AttributeError(
                 f"'{type(self.clustering)}' object has no attribute 'fit_predict'"
@@ -443,6 +446,9 @@ class PSC:
 
         if self.model_fitted is False:
             return self.clustering.fit_predict(U)
+
+        print(U.size)
+        print(U.shape)
 
         return self.clustering.predict(U)
         
