@@ -306,7 +306,8 @@ class PSC:
         # print("Start training")
         u = torch.from_numpy(self.__matrix_before_psc(X)).type(torch.FloatTensor)
         dataset = torch.utils.data.TensorDataset(x, u)
-        dataloader = torch.utils.data.DataLoader(dataset, batch_size = 50, shuffle = True)
+        # dataloader = torch.utils.data.DataLoader(dataset, batch_size = 50, shuffle = True) # kmeans, sc
+        dataloader = torch.utils.data.DataLoader(dataset, batch_size = 40, shuffle = True) # PSC with rate=0.7, kmeans, sc
         self.dataloader = dataloader
 
         for _ in range(self.epochs):
@@ -412,9 +413,6 @@ class PSC:
         """
         U = self.training_psc_model(X)
 
-        print(U.size)
-        print(U.shape)
-
         if hasattr(self.clustering, "fit_predict") is False:
             raise AttributeError(
                 f"'{type(self.clustering)}' object has no attribute 'fit_predict'"
@@ -446,9 +444,6 @@ class PSC:
 
         if self.model_fitted is False:
             return self.clustering.fit_predict(U)
-
-        print(U.size)
-        print(U.shape)
 
         return self.clustering.predict(U)
         
