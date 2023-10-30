@@ -309,11 +309,15 @@ class PSC:
         # dataloader = torch.utils.data.DataLoader(dataset, batch_size = 50, shuffle = True) # kmeans, sc
         dataloader = torch.utils.data.DataLoader(dataset, batch_size = 40, shuffle = True) # PSC with rate=0.7, kmeans, sc
         self.dataloader = dataloader
-
-        for _ in range(self.epochs):
+        total_loss = 0
+        for i in range(self.epochs):
             loss = self.__loss_calculation()
+            # print(f"Loss in epoch {i}: {loss}" )
+            total_loss += loss
             if(loss < 0.00015):
+                print(loss)
                 break
+        return total_loss/self.epochs
 
     def __check_file_exist(self, file_name) -> bool:
         for entry in os.listdir('./'):
@@ -361,16 +365,25 @@ class PSC:
 
         # Define batch size
         batch_size = 50
-
+        total_loss = 0
+        i = 1
         # Train the model in mini-batches
         for start_idx in range(0, len(X_train), batch_size):
             end_idx = start_idx + batch_size
             X_batch = X_train[start_idx:end_idx]
             x_batch = x_train[start_idx:end_idx]
             # print("start idx:", start_idx, "end idx:", end_idx)
-            self.__train_model(X_batch, x_batch)
+            loss = self.__train_model(X_batch, x_batch)
+            total_loss += loss
+            # print(i)
+            if i % 20 == 0:
+                print(f"Loss in {i-20} to {i}: {total_loss/20}")
+                total_loss = 0
+            i += 1
 
         U = self.model(x).detach().numpy()
+        # print("loss:", total_loss)
+        # print("x_train len:", len(X_train))
 
         return U
 

@@ -95,7 +95,7 @@ print("\nrate 0")
 print("1 ~ 30000")
 kmeans = KMeans(n_clusters=10, init='random', n_init='auto', algorithm='elkan', random_state=0)
 model = Four_layer_FNN(49, 196, 392, 196, 10)
-psc = PSC(model=model, clustering_method=kmeans, test_splitting_rate=0, n_neighbor=10, epochs=100)
+psc = PSC(model=model, clustering_method=kmeans, test_splitting_rate=0.01, n_neighbor=10, epochs=100)
 
 time1 = round(time.time()*1000)
 PSC_index_1 = psc.fit_predict(X_train[:cut])
