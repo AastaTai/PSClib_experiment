@@ -13,7 +13,7 @@ from scipy.spatial.distance import cdist
 import random
 import pickle
 import os
-
+import pandas as pd
 
 
 class Four_layer_FNN(nn.Module):
@@ -294,6 +294,8 @@ class PSC:
 
         for inputs, labels in self.dataloader:
             self.optimizer.zero_grad()
+            # print("inputs shape:", inputs.shape)
+            # print("labels shape:", labels.shape)
             outputs = self.model(inputs)
             loss = self.criterion(outputs, labels)
             loss.backward()
@@ -358,12 +360,25 @@ class PSC:
 
         x = torch.from_numpy(X).type(torch.FloatTensor)
 
+        # print("shape of x: ", x.shape)
+        if self.test_splitting_rate == 1:
+            raise AttributeError(
+                f"'test_spliting_rate' should be less than 1 and not less than 0."
+            )
+
         if self.test_splitting_rate == 0:
             X_train, x_train = X, x
         
         else:
-            X_train, _, x_train, _ = train_test_split(
+            X_train, _, x_train, __ = train_test_split(
                 X, x, test_size=self.test_splitting_rate, random_state=random.randint(1, 100))
+            # print("shape of X_train: ", X_train.shape)
+            # print("shape of _: ", _.shape)
+            # print("shape of x_train: ", x_train.shape)
+            # print("shape of __: ", __.shape)
+            # print()
+            # df1 = pd.DataFrame(X_train)
+            # df1.to_csv("X", index=False, header=False)   
 
         # Define batch size
         batch_size = 50
@@ -379,7 +394,7 @@ class PSC:
             total_loss += loss
             # print(i)
             if i % 20 == 0:
-                print(f"Loss in {i-20} to {i}: {total_loss/20}")
+                # print(f"Loss in {i-20} to {i}: {total_loss/20}")
                 total_loss = 0
             i += 1
 
