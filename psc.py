@@ -5,6 +5,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from sklearn.cluster import KMeans
+from sklearn.manifold import SpectralEmbedding
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import adjusted_mutual_info_score, adjusted_rand_score
 from scipy import linalg
@@ -304,7 +305,8 @@ class PSC:
     def __train_model(self, X, x):
         self.model_fitted = True
         # print("Start training")
-        u = torch.from_numpy(self.__matrix_before_psc(X)).type(torch.FloatTensor)
+        spectral_embedding = SpectralEmbedding(n_components=10, affinity='nearest_neighbors', n_neighbors=10)
+        u = torch.from_numpy(spectral_embedding.fit_transform(X)).type(torch.FloatTensor)
         dataset = torch.utils.data.TensorDataset(x, u)
         # dataloader = torch.utils.data.DataLoader(dataset, batch_size = 50, shuffle = True) # kmeans, sc
         dataloader = torch.utils.data.DataLoader(dataset, batch_size = 40, shuffle = True) # PSC with rate=0.7, kmeans, sc
@@ -314,9 +316,9 @@ class PSC:
             loss = self.__loss_calculation()
             # print(f"Loss in epoch {i}: {loss}" )
             total_loss += loss
-            if(loss < 0.00015):
-                print(loss)
-                break
+            # if(loss < 0.00015):
+                # print(loss)
+                # break
         return total_loss/self.epochs
 
     def __check_file_exist(self, file_name) -> bool:
