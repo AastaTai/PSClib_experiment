@@ -10,15 +10,15 @@ import time
 import torch
 import random
 import warnings
-import warnings
+from datetime import datetime
 
-warnings.filterwarnings("ignore")
+# warnings.filterwarnings("ignore")
 
 torch.manual_seed(0)
 np.random.seed(0)
 random.seed(0)
 
-df = pd.read_csv("/Users/ivychang/college course/專題/PSClib_experiment/pendigits/dataset_32_pendigits.csv")
+df = pd.read_csv("pendigits/dataset_32_pendigits.csv")
 y = df['class'].values
 print(y)
 x_data = df.drop(columns=['id', 'class']).values
@@ -50,6 +50,10 @@ class Net_emb(nn.Module):
 model = Net_emb(out=10)
 kmeans = KMeans(n_clusters=10, init='random', n_init='auto', algorithm='elkan')
 psc = PSC(model=model, clustering_method=kmeans, test_splitting_rate=0, n_neighbor=10, epochs=50)
+
+# f = open('pendigits/log.txt', 'w')
+# current_time = datetime.now()
+# f.write("\n\n=======" + str(current_time) + "=======")
 
 print("------psc section------")
 time1 = round(time.time() * 1000)

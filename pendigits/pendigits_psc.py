@@ -315,11 +315,7 @@ class PSC:
         total_loss = 0
         for i in range(self.epochs):
             loss = self.__loss_calculation()
-            # print(f"Loss in epoch {i}: {loss}" )
             total_loss += loss
-            # if(loss < 0.00015):
-                # print(loss)
-                # break
         return total_loss/self.epochs
 
     def __check_file_exist(self, file_name) -> bool:
@@ -387,10 +383,7 @@ class PSC:
                 print(f"Loss in {i-20} to {i}: {total_loss/20}")
                 total_loss = 0
             i += 1
-
         U = self.model(x).detach().numpy()
-        # print("loss:", total_loss)
-        # print("x_train len:", len(X_train))
 
         return U
 
