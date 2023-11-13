@@ -5,7 +5,7 @@ import torch.nn as nn
 import sklearn
 from sklearn import metrics
 from sklearn.cluster import SpectralClustering, KMeans
-from psc_firework import PSC, Accuracy
+from pendigits_psc import PSC, Accuracy
 import time
 import datetime
 import torch
@@ -23,36 +23,29 @@ parser.add_argument('-datasize', '--size', type=int, help='data size used for tr
 parser.add_argument('-methods', '--methods', nargs='+', help='which method to test')
 args = parser.parse_args()
 
-class Net1(nn.Module):
-    def __init__(self):
-        super(Net1, self).__init__()
-        # Define the layers
-        self.fc1 = nn.Linear(11, 32)
+class Net_emb(nn.Module):
+    def __init__(self) -> None:
+        super(Net_emb, self).__init__()
+        self.fc1 = nn.Linear(16, 32)
         self.fc2 = nn.Linear(32, 64)
         self.fc3 = nn.Linear(64, 32)
-        self.output_layer = nn.Linear(32, 4)
-
+        self.output_layer = nn.Linear(32, 10)
         self.relu = nn.ReLU()
 
     def forward(self, x):
-
         x = self.fc1(x)
         x = self.fc2(x)
         x = self.fc3(x)
         x = self.output_layer(x)
         return x
 
-
-df = pd.read_csv('firework.csv')
-action = {'allow': 1, 'deny': 2, 'drop': 3, 'reset-both': 4}
-df['Action'] = df['Action'].map(action)
-y_tmp = df['Action'].values
-x_tmp = df.drop(['Action'], axis = 1).values
+df = pd.read_csv("dataset_32_pendigits.csv")
+y_tmp = df['class'].values
+x_tmp = df.drop(columns=['id', 'class']).values
 
 f = open('log.txt', 'a+')
 now = str(datetime.datetime.now())
 f.write("======"+ now+ '======\n')
-
 if args.size == -1:
     f.write("input data size: all\n")
     x_data = x_tmp
@@ -61,14 +54,15 @@ else:
     f.write("input data size: " + str(args.size) + '\n')
     x_data = x_tmp[:args.size]
     y = y_tmp[:args.size]
+
 scaler = sklearn.preprocessing.StandardScaler().fit(x_data)
 x = scaler.transform(x_data)
 methods = args.methods
 
 #--------Spectral Clustering--------
 if 'sc' in methods:
-    spectral_clustering = SpectralClustering(n_clusters=4, assign_labels='discretize', random_state=0)
-    start_time = round(time.time()*1000)
+    spectral_clustering = SpectralClustering(n_clusters=10, assign_labels='discretize', random_state=0)
+    start_time = round(time.time() * 1000)
     sc_index = spectral_clustering.fit_predict(x)
     end_time = round(time.time()*1000)
     print("time spent:", end_time-start_time)
@@ -82,7 +76,7 @@ if 'sc' in methods:
 
 #--------kmeans--------
 if 'kmeans' in methods:
-    kmeans = KMeans(n_clusters=4, init='random', n_init='auto', algorithm='elkan')
+    kmeans = KMeans(n_clusters=10, init='random', n_init='auto', algorithm='elkan')
     start_time = round(time.time() * 1000)
     kmeans_index = kmeans.fit_predict(x)
     end_time = round(time.time() * 1000)
@@ -97,8 +91,8 @@ if 'kmeans' in methods:
 
 #--------Parametric Spectral Clustering--------
 if 'psc' in methods:
-    model = Net1()
-    psc = PSC(model=model, clustering_method=kmeans, test_splitting_rate=0, n_neighbor=4, epochs=50)
+    model = Net_emb()
+    psc = PSC(model=model, clustering_method=kmeans, test_splitting_rate=0, n_neighbor=10, epochs=50)
     start_time = round(time.time() * 1000)
     psc_index = psc.fit_predict(x)
     end_time = round(time.time() * 1000)
@@ -111,4 +105,3 @@ if 'psc' in methods:
     f.write("ami: "+str(psc_ami)+'\n')
     f.write("time spent: " + str(end_time - start_time) + '\n\n\n')
 f.close()
-
