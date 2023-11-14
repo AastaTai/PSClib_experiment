@@ -171,6 +171,8 @@ class Accuracy:
         print(f"Adjusted rand index: {ari}")
         print(f"Adjusted mutual information: {ami}")
 
+        return clusterAcc, ari, ami
+
 
 class PSC:
     """Parametric Spectral Clustering.
@@ -269,27 +271,6 @@ class PSC:
         self.clustering = clustering_method
         self.model_fitted = False
 
-    # input 轉換成做kmeans之前的matrix
-    def __matrix_before_psc(self, X):
-        dist  = cdist(X, X, "euclidean")
-        S = np.zeros(dist.shape)
-        neighbor_index = np.argsort(dist, axis = 1)[:, 1:self.n_neighbor + 1]
-
-        for i in range(X.shape[0]):
-            S[i, neighbor_index[i]] = np.exp(-dist[i, neighbor_index[i]] / (2 * self.sigma ** 2))
-
-        S = np.maximum(S, S.T)
-        D = np.diag(np.sum(S, axis = 1))
-        L = D - S
-        D_tmp = np.linalg.inv(D) ** (1 / 2)
-        L_sym = np.dot(np.dot(D_tmp, L), D_tmp)
-        A,B=np.linalg.eig(L_sym)
-        idx=np.argsort(A)[:self.k]
-        U=B[:,idx]
-        U=U/((np.sum(U**2,axis=1)**0.5)[:,None])
-        return U
-
-
     def __loss_calculation(self):
         running_loss = 0.0
 
@@ -306,7 +287,7 @@ class PSC:
     def __train_model(self, X, x):
         self.model_fitted = True
         # print("Start training")
-        spectral_embedding = SpectralEmbedding(n_components=self.n_neighbor, affinity='nearest_neighbors', n_neighbors=self.n_neighbor, eigen_solver='arpack')
+        spectral_embedding = SpectralEmbedding(n_components=2, affinity='nearest_neighbors', n_neighbors=self.n_neighbor, eigen_solver='arpack')
         u = torch.from_numpy(spectral_embedding.fit_transform(X)).type(torch.FloatTensor)
         dataset = torch.utils.data.TensorDataset(x, u)
         # dataloader = torch.utils.data.DataLoader(dataset, batch_size = 50, shuffle = True) # kmeans, sc (Fashion_MNIST)
