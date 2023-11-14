@@ -255,9 +255,7 @@ class PSC:
         criterion = nn.MSELoss(),
         epochs = 50,
         clustering_method = KMeans(n_clusters=10, init="k-means++", n_init=1, max_iter=100, algorithm='elkan'),
-        test_splitting_rate = 0.3,
-        batch_size_data = 50,
-        batch_size_dataloader = 20
+        test_splitting_rate = 0.3
         ) -> None:
 
         self.n_neighbor = n_neighbor
@@ -271,9 +269,6 @@ class PSC:
         self.epochs = epochs
         self.clustering = clustering_method
         self.model_fitted = False
-
-        self.batch_size_data = batch_size_data
-        self.batch_size_dataloader = batch_size_dataloader
 
     # input 轉換成做kmeans之前的matrix
     def __matrix_before_psc(self, X):
@@ -311,15 +306,21 @@ class PSC:
 
     def __train_model(self, X, x):
         self.model_fitted = True
-        spectral_embedding = SpectralEmbedding(n_components=3, affinity='nearest_neighbors', n_neighbors=self.n_neighbor, eigen_solver='arpack')
+        # print("Start training")
+        spectral_embedding = SpectralEmbedding(n_components=26, affinity='nearest_neighbors', n_neighbors=self.n_neighbor, eigen_solver='arpack')
         u = torch.from_numpy(spectral_embedding.fit_transform(X)).type(torch.FloatTensor)
         dataset = torch.utils.data.TensorDataset(x, u)
-        dataloader = torch.utils.data.DataLoader(dataset, batch_size = self.batch_size_dataloader, shuffle = True)
+        # dataloader = torch.utils.data.DataLoader(dataset, batch_size = 50, shuffle = True) # kmeans, sc (Fashion_MNIST)
+        dataloader = torch.utils.data.DataLoader(dataset, batch_size = 20, shuffle = True) # PSC with rate=0.7, kmeans, sc (Fashion_MNIST, Firework(works))
         self.dataloader = dataloader
         total_loss = 0
-        for _ in range(self.epochs):
+        for i in range(self.epochs):
             loss = self.__loss_calculation()
+            # print(f"Loss in epoch {i}: {loss}" )
             total_loss += loss
+            # if(loss < 0.00015):
+                # print(loss)
+                # break
         return total_loss/self.epochs
 
     def __check_file_exist(self, file_name) -> bool:
@@ -373,7 +374,7 @@ class PSC:
                 X, x, test_size=self.test_splitting_rate, random_state=random.randint(1, 100)) 
 
         # Define batch size
-        batch_size = self.batch_size_data
+        batch_size = 50         # (for works) 20 no warning, 50 warning; (for improve net) 100 warning
         total_loss = 0
         i = 1
         # Train the model in mini-batches
