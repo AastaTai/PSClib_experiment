@@ -169,6 +169,7 @@ class Accuracy:
         print(f"Clustering Accuracy: {clusterAcc}")
         print(f"Adjusted rand index: {ari}")
         print(f"Adjusted mutual information: {ami}")
+        return clusterAcc, ari, ami
 
 
 class PSC:
