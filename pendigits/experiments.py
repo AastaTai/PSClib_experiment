@@ -39,11 +39,11 @@ class Net_emb(nn.Module):
         x = self.output_layer(x)
         return x
 
-df = pd.read_csv("dataset_32_pendigits.csv")
+df = pd.read_csv("pendigits\dataset_32_pendigits.csv")
 y_tmp = df['class'].values
 x_tmp = df.drop(columns=['id', 'class']).values
 
-f = open('log.txt', 'a+')
+f = open('pendigits\log.txt', 'a+')
 now = str(datetime.datetime.now())
 f.write("======"+ now+ '======\n')
 if args.size == -1:
@@ -61,7 +61,8 @@ methods = args.methods
 
 #--------Spectral Clustering--------
 if 'sc' in methods:
-    spectral_clustering = SpectralClustering(n_clusters=10, assign_labels='discretize', random_state=0)
+    # spectral_clustering = SpectralClustering(n_clusters=10, assign_labels='discretize', random_state=0)
+    spectral_clustering = SpectralClustering(n_clusters=10, eigen_solver='arpack', affinity='nearest_neighbors', assign_labels='kmeans')
     start_time = round(time.time() * 1000)
     sc_index = spectral_clustering.fit_predict(x)
     end_time = round(time.time()*1000)
@@ -92,6 +93,7 @@ if 'kmeans' in methods:
 #--------Parametric Spectral Clustering--------
 if 'psc' in methods:
     model = Net_emb()
+    kmeans = KMeans(n_clusters=10, init='random', n_init='auto', algorithm='elkan')
     psc = PSC(model=model, clustering_method=kmeans, test_splitting_rate=0, n_neighbor=10, epochs=50)
     start_time = round(time.time() * 1000)
     psc_index = psc.fit_predict(x)

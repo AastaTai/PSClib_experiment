@@ -43,13 +43,13 @@ class Net1(nn.Module):
         return x
 
 
-df = pd.read_csv('firework.csv')
+df = pd.read_csv('firework/firework.csv')
 action = {'allow': 1, 'deny': 2, 'drop': 3, 'reset-both': 4}
 df['Action'] = df['Action'].map(action)
 y_tmp = df['Action'].values
 x_tmp = df.drop(['Action'], axis = 1).values
 
-f = open('log.txt', 'a+')
+f = open('firework/log.txt', 'a+')
 now = str(datetime.datetime.now())
 f.write("======"+ now+ '======\n')
 
@@ -67,7 +67,8 @@ methods = args.methods
 
 #--------Spectral Clustering--------
 if 'sc' in methods:
-    spectral_clustering = SpectralClustering(n_clusters=4, assign_labels='discretize', random_state=0)
+    # spectral_clustering = SpectralClustering(n_clusters=4, assign_labels='discretize', random_state=0)
+    spectral_clustering = SpectralClustering(n_clusters=4, eigen_solver='arpack', affinity='nearest_neighbors', assign_labels='kmeans')
     start_time = round(time.time()*1000)
     sc_index = spectral_clustering.fit_predict(x)
     end_time = round(time.time()*1000)
@@ -82,7 +83,7 @@ if 'sc' in methods:
 
 #--------kmeans--------
 if 'kmeans' in methods:
-    kmeans = KMeans(n_clusters=4, init='random', n_init='auto', algorithm='elkan')
+    kmeans = KMeans(n_clusters=4, init='k-means++', n_init='auto', algorithm='elkan')
     start_time = round(time.time() * 1000)
     kmeans_index = kmeans.fit_predict(x)
     end_time = round(time.time() * 1000)
@@ -98,6 +99,7 @@ if 'kmeans' in methods:
 #--------Parametric Spectral Clustering--------
 if 'psc' in methods:
     model = Net1()
+    kmeans = KMeans(n_clusters=4, init='k-means++', n_init='auto', algorithm='elkan')
     psc = PSC(model=model, clustering_method=kmeans, test_splitting_rate=0, n_neighbor=4, epochs=50)
     start_time = round(time.time() * 1000)
     psc_index = psc.fit_predict(x)

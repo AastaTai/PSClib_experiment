@@ -106,3 +106,32 @@ ami: 0.2484610165612031
 time spent: 47164
 
 
+======2023-11-20 21:19:23.905168======
+input data size: all
+---SpectralClustering---
+acc rate: 0.19115
+ari: 0.018237309741292246
+ami: 0.3099366025741159
+time spent: 34415
+
+---------Kmeans---------
+acc rate: 0.28835
+ari: 0.16140989161635722
+ami: 0.381295629966415
+time spent: 2471
+
+----------PSC----------
+acc rate: 0.35095
+ari: 0.19261896608709086
+ami: 0.40483898341533386
+time spent: 84938
+
+
+======2023-11-20 21:23:42.375451======
+input data size: all
+---SpectralClustering---
+acc rate: 0.1699
+ari: 0.02244919312652181
+ami: 0.3004660056179069
+time spent: 198532
+

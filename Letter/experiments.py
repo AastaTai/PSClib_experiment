@@ -25,7 +25,7 @@ parser.add_argument('-datasize', '--size', type=int, help='data size used for tr
 parser.add_argument('-methods', '--methods', nargs='+', help='which method to test')
 args = parser.parse_args()
 
-data = arff.loadarff('dataset_6_letter.arff')
+data = arff.loadarff('Letter/dataset_6_letter.arff')
 df = pd.DataFrame(data[0])
 df['class'] = df['class'].astype(str)
 
@@ -58,7 +58,7 @@ class Net_emb(nn.Module):
         x = self.output_layer(x)
         return x
 
-f = open('log.txt', 'a+')
+f = open('Letter/log.txt', 'a+')
 now = str(datetime.datetime.now())
 f.write("======"+ now+ '======\n')
 if args.size == -1:
@@ -77,7 +77,9 @@ methods = args.methods
 
 #--------Spectral Clustering--------
 if 'sc' in methods:
-    spectral_clustering = SpectralClustering(n_clusters=10, assign_labels='discretize', random_state=0)
+    # spectral_clustering = SpectralClustering(n_clusters=26, assign_labels='discretize', random_state=0)
+    spectral_clustering = SpectralClustering(n_clusters=26, eigen_solver='arpack', affinity='nearest_neighbors', assign_labels='kmeans')
+    # spectral_clustering = SpectralClustering(n_clusters=26)
     start_time = round(time.time() * 1000)
     sc_index = spectral_clustering.fit_predict(x)
     end_time = round(time.time()*1000)
@@ -92,7 +94,7 @@ if 'sc' in methods:
 
 #--------kmeans--------
 if 'kmeans' in methods:
-    kmeans = KMeans(n_clusters=10, init='random', n_init='auto', algorithm='elkan')
+    kmeans = KMeans(n_clusters=26, init='random', n_init='auto', algorithm='elkan')
     start_time = round(time.time() * 1000)
     kmeans_index = kmeans.fit_predict(x)
     end_time = round(time.time() * 1000)
@@ -108,7 +110,8 @@ if 'kmeans' in methods:
 #--------Parametric Spectral Clustering--------
 if 'psc' in methods:
     model = Net_emb()
-    psc = PSC(model=model, clustering_method=kmeans, test_splitting_rate=0, n_neighbor=10, epochs=50)
+    kmeans = KMeans(n_clusters=26, init='random', n_init='auto', algorithm='elkan')
+    psc = PSC(model=model, clustering_method=kmeans, test_splitting_rate=0, n_neighbor=26)
     start_time = round(time.time() * 1000)
     psc_index = psc.fit_predict(x)
     end_time = round(time.time() * 1000)
