@@ -35,15 +35,16 @@ class Net_emb(nn.Module):
     def forward(self, x):
         x = self.fc1(x)
         x = self.fc2(x)
+        x = self.relu(x)
         x = self.fc3(x)
         x = self.output_layer(x)
         return x
 
-df = pd.read_csv("pendigits\dataset_32_pendigits.csv")
+df = pd.read_csv("dataset_32_pendigits.csv")
 y_tmp = df['class'].values
 x_tmp = df.drop(columns=['id', 'class']).values
 
-f = open('pendigits\log.txt', 'a+')
+f = open('log.txt', 'a+')
 now = str(datetime.datetime.now())
 f.write("======"+ now+ '======\n')
 if args.size == -1:
