@@ -27,10 +27,10 @@ class Net1(nn.Module):
     def __init__(self):
         super(Net1, self).__init__()
         # Define the layers
-        self.fc1 = nn.Linear(11, 32)
-        self.fc2 = nn.Linear(32, 64)
-        self.fc3 = nn.Linear(64, 32)
-        self.output_layer = nn.Linear(32, 4)
+        self.fc1 = nn.Linear(54, 64)
+        self.fc2 = nn.Linear(64, 128)
+        self.fc3 = nn.Linear(128, 64)
+        self.output_layer = nn.Linear(64, 4)
 
         self.relu = nn.ReLU()
 
@@ -43,13 +43,13 @@ class Net1(nn.Module):
         return x
 
 
-df = pd.read_csv('firework/firework.csv')
+df = pd.read_csv('firework.csv')
 action = {'allow': 1, 'deny': 2, 'drop': 3, 'reset-both': 4}
 df['Action'] = df['Action'].map(action)
 y_tmp = df['Action'].values
 x_tmp = df.drop(['Action'], axis = 1).values
 
-f = open('firework/log.txt', 'a+')
+f = open('log.txt', 'a+')
 now = str(datetime.datetime.now())
 f.write("======"+ now+ '======\n')
 
@@ -83,7 +83,7 @@ if 'sc' in methods:
 
 #--------kmeans--------
 if 'kmeans' in methods:
-    kmeans = KMeans(n_clusters=4, init='k-means++', n_init='auto', algorithm='elkan')
+    kmeans = KMeans(n_clusters=4, init='random', n_init='auto', algorithm='elkan')
     start_time = round(time.time() * 1000)
     kmeans_index = kmeans.fit_predict(x)
     end_time = round(time.time() * 1000)

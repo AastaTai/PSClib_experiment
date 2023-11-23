@@ -26,17 +26,17 @@ args = parser.parse_args()
 class Net_emb(nn.Module):
     def __init__(self) -> None:
         super(Net_emb, self).__init__()
-        self.fc1 = nn.Linear(10, 32)
-        self.fc2 = nn.Linear(32, 64)
-        # self.fc3 = nn.Linear(128, 64)
+        self.fc1 = nn.Linear(54, 64)
+        self.fc2 = nn.Linear(64, 128)
+        self.fc3 = nn.Linear(128, 64)
         self.fc4 = nn.Linear(64, 32)
-        self.output_layer = nn.Linear(32, 7)
+        self.output_layer = nn.Linear(32, 3)
         self.relu = nn.ReLU()
 
     def forward(self, x):
         x = self.fc1(x)
         x = self.fc2(x)
-        # x = self.fc3(x)
+        x = self.fc3(x)
         x = self.fc4(x)
         x = self.output_layer(x)
         return x
@@ -44,12 +44,12 @@ class Net_emb(nn.Module):
 
 df = pd.read_csv("covertype.csv")
 y_tmp = df['class'].values
-# x_tmp = df.drop(columns=['class']).values
-x_tmp = df.drop(columns=['Wilderness_Area1', 'Wilderness_Area2', 'Wilderness_Area3', 'Wilderness_Area4', 'class',
-                         'Soil_Type1', 'Soil_Type2', 'Soil_Type3', 'Soil_Type4', 'Soil_Type5', 'Soil_Type6', 'Soil_Type7', 'Soil_Type8', 'Soil_Type9', 'Soil_Type10',
-                         'Soil_Type11', 'Soil_Type12', 'Soil_Type13', 'Soil_Type14', 'Soil_Type15', 'Soil_Type16', 'Soil_Type17', 'Soil_Type18', 'Soil_Type19', 'Soil_Type20',
-                         'Soil_Type21', 'Soil_Type22', 'Soil_Type23', 'Soil_Type24', 'Soil_Type25', 'Soil_Type26', 'Soil_Type27', 'Soil_Type28', 'Soil_Type29', 'Soil_Type30',
-                         'Soil_Type31', 'Soil_Type32', 'Soil_Type33', 'Soil_Type34', 'Soil_Type35', 'Soil_Type36', 'Soil_Type37', 'Soil_Type38', 'Soil_Type39', 'Soil_Type40']).values
+x_tmp = df.drop(columns=['class']).values
+# x_tmp = df.drop(columns=['Wilderness_Area1', 'Wilderness_Area2', 'Wilderness_Area3', 'Wilderness_Area4', 'class',
+#                          'Soil_Type1', 'Soil_Type2', 'Soil_Type3', 'Soil_Type4', 'Soil_Type5', 'Soil_Type6', 'Soil_Type7', 'Soil_Type8', 'Soil_Type9', 'Soil_Type10',
+#                          'Soil_Type11', 'Soil_Type12', 'Soil_Type13', 'Soil_Type14', 'Soil_Type15', 'Soil_Type16', 'Soil_Type17', 'Soil_Type18', 'Soil_Type19', 'Soil_Type20',
+#                          'Soil_Type21', 'Soil_Type22', 'Soil_Type23', 'Soil_Type24', 'Soil_Type25', 'Soil_Type26', 'Soil_Type27', 'Soil_Type28', 'Soil_Type29', 'Soil_Type30',
+                        #  'Soil_Type31', 'Soil_Type32', 'Soil_Type33', 'Soil_Type34', 'Soil_Type35', 'Soil_Type36', 'Soil_Type37', 'Soil_Type38', 'Soil_Type39', 'Soil_Type40']).values
 
 f = open('log.txt', 'a+')
 now = str(datetime.datetime.now())
@@ -70,7 +70,7 @@ methods = args.methods
 
 #--------Spectral Clustering--------
 if 'sc' in methods:
-    spectral_clustering = SpectralClustering(n_clusters=7, assign_labels='discretize', random_state=0)
+    spectral_clustering = SpectralClustering(n_clusters=3, assign_labels='discretize', random_state=0)
     start_time = round(time.time() * 1000)
     sc_index = spectral_clustering.fit_predict(x)
     end_time = round(time.time()*1000)
@@ -85,7 +85,7 @@ if 'sc' in methods:
 
 #--------kmeans--------
 if 'kmeans' in methods:
-    kmeans = KMeans(n_clusters=7, init='random', n_init='auto', algorithm='elkan')
+    kmeans = KMeans(n_clusters=3, init='random', n_init='auto', algorithm='elkan')
     start_time = round(time.time() * 1000)
     kmeans_index = kmeans.fit_predict(x)
     end_time = round(time.time() * 1000)
