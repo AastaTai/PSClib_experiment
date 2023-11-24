@@ -307,7 +307,7 @@ class PSC:
     def __train_model(self, X, x):
         self.model_fitted = True
         # print("Start training")
-        spectral_embedding = SpectralEmbedding(n_components=7, affinity='nearest_neighbors', n_neighbors=self.n_neighbor, eigen_solver='arpack')
+        spectral_embedding = SpectralEmbedding(n_components=3, affinity='nearest_neighbors', n_neighbors=self.n_neighbor, eigen_solver='arpack')
         u = torch.from_numpy(spectral_embedding.fit_transform(X)).type(torch.FloatTensor)
         dataset = torch.utils.data.TensorDataset(x, u)
         # dataloader = torch.utils.data.DataLoader(dataset, batch_size = 50, shuffle = True) # kmeans, sc (Fashion_MNIST)
