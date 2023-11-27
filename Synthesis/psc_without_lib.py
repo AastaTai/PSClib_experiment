@@ -135,7 +135,8 @@ for i_dataset, (dataset, algo_params) in enumerate(datasets):
         Loss = train(net=net, optimizer=optimizer, criterion=criterion, X=X, y=embedding)
         print(f"Epoch {epoch+1}, Loss: {Loss:.4f}")
     kmeans = KMeans(n_clusters=params['n_clusters'], init='random', n_init='auto')
-    y_pred = kmeans.fit_predict(embedding)
+    X_embedded = net(torch.from_numpy(X).type(torch.FloatTensor)).detach().numpy()
+    y_pred = kmeans.fit_predict(X_embedded)
     t1 = time.time()
 
     plt.subplot(len(datasets), 1, plot_num)
