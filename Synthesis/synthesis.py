@@ -87,8 +87,10 @@ class Net(nn.Module):
 
         x = self.fc1(x)
         x = self.fc2(x)
+        x = self.relu(x)
         x = self.fc3(x)
         x = self.fc4(x)
+        x = self.relu(x)
         x = self.fc5(x)
         x = self.output_layer(x)
         return x
