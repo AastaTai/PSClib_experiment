@@ -79,24 +79,26 @@ default_base = {'quantile': .3,
                 'xi': 0.05,
                 'min_cluster_size': 0.1}
 
-datasets = [
-    (noisy_circles, {'damping': .77, 'preference': -240,
-                     'quantile': .2, 'n_clusters': 2,
-                     'min_samples': 20, 'xi': 0.25}),
-    (noisy_moons, {'damping': .75, 'preference': -220, 'n_clusters': 2}),
-    (varied, {'eps': .18, 'n_neighbors': 2,
-              'min_samples': 5, 'xi': 0.035, 'min_cluster_size': .2}),
-    (aniso, {'eps': .15, 'n_neighbors': 2,
-             'min_samples': 20, 'xi': 0.1, 'min_cluster_size': .2}),
-    (blobs, {}),
-    (no_structure, {})]
-
 # datasets = [
 #     (noisy_circles, {'damping': .77, 'preference': -240,
 #                      'quantile': .2, 'n_clusters': 2,
 #                      'min_samples': 20, 'xi': 0.25}),
-#     (noisy_moons, {'damping': .75, 'preference': -220, 'n_clusters': 2})
-# ]
+#     (noisy_moons, {'damping': .75, 'preference': -220, 'n_clusters': 2}),
+#     (varied, {'eps': .18, 'n_neighbors': 2,
+#               'min_samples': 5, 'xi': 0.035, 'min_cluster_size': .2}),
+#     (aniso, {'eps': .15, 'n_neighbors': 2,
+#              'min_samples': 20, 'xi': 0.1, 'min_cluster_size': .2}),
+#     (blobs, {}),
+#     (no_structure, {})]
+
+datasets = [
+    (noisy_circles, {'damping': .77, 'preference': -240,
+                     'quantile': .2, 'n_clusters': 2,
+                     'min_samples': 20, 'xi': 0.25}),
+    # (noisy_moons, {'damping': .75, 'preference': -220, 'n_clusters': 2})
+    (varied, {'eps': .18, 'n_neighbors': 2,
+              'min_samples': 5, 'xi': 0.035, 'min_cluster_size': .2}),
+]
 
 
 def train(net, optimizer, criterion, X, y):
@@ -120,7 +122,7 @@ for i_dataset, (dataset, algo_params) in enumerate(datasets):
     params = default_base.copy()
     params.update(algo_params)
     X, y = dataset
-    print(y)
+    print(params)
 
     X = StandardScaler().fit_transform(X)
     bandwidth = cluster.estimate_bandwidth(X, quantile=params['quantile'])
@@ -128,18 +130,20 @@ for i_dataset, (dataset, algo_params) in enumerate(datasets):
         X, n_neighbors=params['n_neighbors'], include_self=False)
     connectivity = 0.5 * (connectivity + connectivity.T)
 
-    spectralembedding = SpectralEmbedding(n_components=params['n_clusters'], affinity='nearest_neighbors', n_neighbors=params['n_neighbors'])
+    spectralembedding = SpectralEmbedding(n_components=params['n_clusters'], affinity='nearest_neighbors', eigen_solver='arpack')
+    # print("neighbors:",spectralembedding)
     embedding = spectralembedding.fit_transform(X)
     net = Net(params['n_clusters'])
     criterion = nn.MSELoss()
     optimizer = optim.Adam(net.parameters())
     t0 = time.time()
-    for epoch in range(20):
-        Loss = train(net=net, optimizer=optimizer, criterion=criterion, X=X, y=embedding)
-        print(f"Epoch {epoch+1}, Loss: {Loss:.4f}")
-    kmeans = KMeans(n_clusters=params['n_clusters'], init='random', n_init='auto')
-    X_embedded = net(torch.from_numpy(X).type(torch.FloatTensor)).detach().numpy()
-    y_pred = kmeans.fit_predict(X_embedded)
+    # for epoch in range(20):
+    #     Loss = train(net=net, optimizer=optimizer, criterion=criterion, X=X, y=embedding)
+    #     print(f"Epoch {epoch+1}, Loss: {Loss:.4f}")
+    kmeans = KMeans(n_clusters=params['n_clusters'], init='k-means++', n_init=10)
+    # X_embedded = net(torch.from_numpy(X).type(torch.FloatTensor)).detach().numpy()
+    # y_pred = kmeans.fit_predict(X_embedded)
+    y_pred = kmeans.fit_predict(embedding)
     t1 = time.time()
 
     plt.subplot(len(datasets), 1, plot_num)
