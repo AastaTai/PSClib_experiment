@@ -77,23 +77,24 @@ default_base = {'quantile': .3,
                 'xi': 0.05,
                 'min_cluster_size': 0.1}
 
+datasets = [
+    (noisy_circles, {'damping': .77, 'preference': -240,
+                     'quantile': .2, 'n_clusters': 2,
+                     'min_samples': 20, 'xi': 0.25}),
+    (noisy_moons, {'damping': .75, 'preference': -220, 'n_clusters': 2}),
+    (varied, {'eps': .18, 'n_neighbors': 2,
+              'min_samples': 5, 'xi': 0.035, 'min_cluster_size': .2}),
+    (aniso, {'eps': .15, 'n_neighbors': 2,
+             'min_samples': 20, 'xi': 0.1, 'min_cluster_size': .2}),
+    (blobs, {}),
+    (no_structure, {})]
+
 # datasets = [
 #     (noisy_circles, {'damping': .77, 'preference': -240,
 #                      'quantile': .2, 'n_clusters': 2,
 #                      'min_samples': 20, 'xi': 0.25}),
-#     (noisy_moons, {'damping': .75, 'preference': -220, 'n_clusters': 2}),
-#     (varied, {'eps': .18, 'n_neighbors': 2,
-#               'min_samples': 5, 'xi': 0.035, 'min_cluster_size': .2}),
-#     (aniso, {'eps': .15, 'n_neighbors': 2,
-#              'min_samples': 20, 'xi': 0.1, 'min_cluster_size': .2}),
-#     (blobs, {}),
-#     (no_structure, {})]
-
-datasets = [
-    (noisy_circles, {'damping': .77, 'preference': -240,
-                     'quantile': .2, 'n_clusters': 2,
-                     'min_samples': 20, 'xi': 0.25})
-]
+#     (noisy_moons, {'damping': .75, 'preference': -220, 'n_clusters': 2})
+# ]
 
 
 def train(net, optimizer, criterion, X, y):
@@ -156,5 +157,6 @@ for i_dataset, (dataset, algo_params) in enumerate(datasets):
     plt.text(.99, .01, ('%.2fs' % (t1 - t0)).lstrip('0'),
                 transform=plt.gca().transAxes, size=12,
                 horizontalalignment='right')
-    plot_num+1
+    plot_num += 1
+
 plt.show()

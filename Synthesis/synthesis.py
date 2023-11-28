@@ -18,7 +18,7 @@ np.random.seed(0)
 # Generate datasets. We choose the size big enough to see the scalability
 # of the algorithms, but not too big to avoid too long running times
 # ============
-n_samples = 20000
+n_samples = 10000
 noisy_circles = datasets.make_circles(n_samples=n_samples, factor=.5,
                                       noise=.05)
 x, y = noisy_circles
@@ -116,7 +116,7 @@ for i_dataset, (dataset, algo_params) in enumerate(datasets):
     # Create cluster objects
     # ============
     KMeans = cluster.KMeans(n_clusters=params['n_clusters'], init='random', n_init='auto', algorithm='elkan')
-    # spectral = cluster.SpectralClustering(n_clusters=params['n_clusters'], eigen_solver='arpack', affinity="nearest_neighbors")
+    spectral = cluster.SpectralClustering(n_clusters=params['n_clusters'], eigen_solver='arpack', affinity="nearest_neighbors")
 
     model = Net(params['n_clusters'])
     kmeans = cluster.KMeans(n_clusters=params['n_clusters'], init='k-means++', n_init='auto', algorithm='elkan')
@@ -124,8 +124,8 @@ for i_dataset, (dataset, algo_params) in enumerate(datasets):
 
     clustering_algorithms = (
         ('KMeans', KMeans),
-        # ('SpectralClustering', spectral),
-        ('ParametricSpectralClustering', psc)
+        ('SpectralClustering', spectral),
+        ('PSC with library', psc)
     )
 
     for name, algorithm in clustering_algorithms:

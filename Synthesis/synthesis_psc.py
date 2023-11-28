@@ -310,8 +310,8 @@ class PSC:
     def __train_model(self, X, x):
         self.model_fitted = True
         # print("Start training")
-        # spectral_embedding = SpectralEmbedding(n_components=self.n_components, affinity='nearest_neighbors', n_neighbors=10)
-        spectral_embedding = SpectralEmbedding(n_components=self.n_components, affinity='rbf', n_neighbors=10, gamma=0.5)
+        spectral_embedding = SpectralEmbedding(n_components=self.n_components, affinity='nearest_neighbors', n_neighbors=10)
+        # spectral_embedding = SpectralEmbedding(n_components=self.n_components, affinity='rbf', n_neighbors=10, gamma=0.5)
         u = torch.from_numpy(spectral_embedding.fit_transform(X)).type(torch.FloatTensor)
         dataset = torch.utils.data.TensorDataset(x, u)
         # dataloader = torch.utils.data.DataLoader(dataset, batch_size = 50, shuffle = True) # kmeans, sc
