@@ -3,7 +3,9 @@ import warnings
 
 import numpy as np
 import matplotlib.pyplot as plt
+import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 from sklearn import cluster, datasets, mixture
 from sklearn.neighbors import kneighbors_graph
@@ -18,7 +20,7 @@ np.random.seed(0)
 # Generate datasets. We choose the size big enough to see the scalability
 # of the algorithms, but not too big to avoid too long running times
 # ============
-n_samples = 2000
+n_samples = 10000
 noisy_circles = datasets.make_circles(n_samples=n_samples, factor=.5,
                                       noise=.05)
 x, y = noisy_circles
@@ -42,7 +44,7 @@ varied = datasets.make_blobs(n_samples=n_samples,
 # ============
 # Set up cluster parameters
 # ============
-plt.figure(figsize=(7, 12.5))
+plt.figure(figsize=(5, 12.5))
 plt.subplots_adjust(left=.02, right=.98, bottom=.001, top=.96, wspace=.05,
                     hspace=.01)
 
@@ -61,14 +63,13 @@ default_base = {'quantile': .3,
 datasets = [
     (noisy_circles, {'damping': .77, 'preference': -240,
                      'quantile': .2, 'n_clusters': 2,
-                     'min_samples': 20, 'xi': 0.25}),
-    (noisy_moons, {'damping': .75, 'preference': -220, 'n_clusters': 2}),
-    (varied, {'eps': .18, 'n_neighbors': 2,
-              'min_samples': 5, 'xi': 0.035, 'min_cluster_size': .2}),
-    (aniso, {'eps': .15, 'n_neighbors': 2,
-             'min_samples': 20, 'xi': 0.1, 'min_cluster_size': .2}),
-    (blobs, {}),
-    (no_structure, {})]
+                     'min_samples': 20, 'xi': 0.25, 'n_neighbors': 50}),
+    # (noisy_moons, {'damping': .75, 'preference': -220, 'n_clusters': 2})
+    # (varied, {'eps': .18, 'n_neighbors': 2,
+    #           'min_samples': 5, 'xi': 0.035, 'min_cluster_size': .2}),
+    (aniso, {'eps': .15, 'n_neighbors': 16,
+             'min_samples': 20, 'xi': 0.1, 'min_cluster_size': .2})
+]
 
 class Net(nn.Module):
     def __init__(self, out_put):
@@ -85,45 +86,36 @@ class Net(nn.Module):
 
     def forward(self, x):
 
-        x = self.fc1(x)
-        x = self.fc2(x)
-        x = self.fc3(x)
-        x = self.fc4(x)
-        x = self.fc5(x)
+        x = self.relu(self.fc1(x))
+        x = self.relu(self.fc2(x))
+        x = self.relu(self.fc3(x))
+        x = self.relu(self.fc4(x))
+        x = self.relu(self.fc5(x))
         x = self.output_layer(x)
         return x
 
 for i_dataset, (dataset, algo_params) in enumerate(datasets):
-    # update parameters with dataset-specific values
     params = default_base.copy()
     params.update(algo_params)
-
     X, y = dataset
 
-    # normalize dataset for easier parameter selection
     X = StandardScaler().fit_transform(X)
 
-    # estimate bandwidth for mean shift
     bandwidth = cluster.estimate_bandwidth(X, quantile=params['quantile'])
-
-    # connectivity matrix for structured Ward
     connectivity = kneighbors_graph(
         X, n_neighbors=params['n_neighbors'], include_self=False)
-    # make connectivity symmetric
     connectivity = 0.5 * (connectivity + connectivity.T)
 
-    # ============
-    # Create cluster objects
-    # ============
     KMeans = cluster.KMeans(n_clusters=params['n_clusters'], init='random', n_init='auto', algorithm='elkan')
     spectral = cluster.SpectralClustering(n_clusters=params['n_clusters'], eigen_solver='arpack', affinity="nearest_neighbors")
 
     model = Net(params['n_clusters'])
     kmeans = cluster.KMeans(n_clusters=params['n_clusters'], init='k-means++', n_init='auto', algorithm='elkan')
-    psc = PSC(model=model, clustering_method=kmeans, test_splitting_rate=0, n_neighbor=params['n_clusters'])
+    kmeans = cluster.KMeans(n_clusters=params['n_clusters'], init='k-means++', n_init='auto', algorithm='elkan')
+    psc = PSC(model=model, clustering_method=kmeans, test_splitting_rate=0, n_components=params['n_clusters'], n_neighbor=params['n_neighbors'], batch_size_data=10000)
 
     clustering_algorithms = (
-        ('KMeans', KMeans),
+        # ('KMeans', KMeans),
         ('SpectralClustering', spectral),
         ('ParametricSpectralClustering', psc)
     )
@@ -148,7 +140,7 @@ for i_dataset, (dataset, algo_params) in enumerate(datasets):
 
         t1 = time.time()
         if hasattr(algorithm, 'labels_'):
-            y_pred = algorithm.labels_.astype(np.int32)
+            y_pred = algorithm.labels_.astype(np.int64)
         else:
             y_pred = algorithm.predict(X)
 
