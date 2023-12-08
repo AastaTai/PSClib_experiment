@@ -92,12 +92,12 @@ default_base = {'quantile': .3,
 #     (no_structure, {})]
 
 datasets = [
-    (noisy_circles, {'damping': .77, 'preference': -240,
-                     'quantile': .2, 'n_clusters': 2,
-                     'min_samples': 20, 'xi': 0.25}),
-    # (noisy_moons, {'damping': .75, 'preference': -220, 'n_clusters': 2})
-    (varied, {'eps': .18, 'n_neighbors': 2,
-              'min_samples': 5, 'xi': 0.035, 'min_cluster_size': .2}),
+    # (noisy_circles, {'damping': .77, 'preference': -240,
+    #                  'quantile': .2, 'n_clusters': 2,
+    #                  'min_samples': 20, 'xi': 0.25}),
+    (noisy_moons, {'damping': .75, 'preference': -220, 'n_clusters': 2})
+    # (varied, {'eps': .18, 'n_neighbors': 2,
+            #   'min_samples': 5, 'xi': 0.035, 'min_cluster_size': .2}),
 ]
 
 
