@@ -139,8 +139,8 @@ for i_dataset, (dataset, algo_params) in enumerate(datasets):
 
     clustering_algorithms = (
         ('KMeans', KMeans),
-        ('SpectralClustering', spectral),
-        # ('PSC with library', psc)
+        # ('SpectralClustering', spectral),
+        ('PSC with library', psc)
     )
 
     for name, algorithm in clustering_algorithms:

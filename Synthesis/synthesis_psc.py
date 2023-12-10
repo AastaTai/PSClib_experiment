@@ -4,10 +4,11 @@ from scipy.optimize import linear_sum_assignment
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from sklearn.cluster import KMeans
-from sklearn.manifold import SpectralEmbedding
+from sklearn.cluster import KMeans, k_means
+from sklearn.manifold import SpectralEmbedding, spectral_embedding
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import adjusted_mutual_info_score, adjusted_rand_score
+from sklearn.neighbors import kneighbors_graph
 from scipy import linalg
 from scipy.spatial.distance import cdist
 import random
@@ -253,7 +254,7 @@ class PSC:
         model = Four_layer_FNN(64, 128, 256, 64, 10),
         criterion = nn.MSELoss(),
         epochs = 50,
-        clustering_method = KMeans(n_clusters=10, init="k-means++", n_init=1, max_iter=100, algorithm='elkan'),
+        clustering_method = KMeans(n_clusters=10, init="k-means++", n_init=10, random_state=1),
         test_splitting_rate = 0.3,
         n_components = 0
         ) -> None:
@@ -310,9 +311,15 @@ class PSC:
     def __train_model(self, X, x):
         self.model_fitted = True
         # print("Start training")
-        spectral_embedding = SpectralEmbedding(n_components=self.n_components, affinity='nearest_neighbors', n_neighbors=10)
-        # spectral_embedding = SpectralEmbedding(n_components=self.n_components, affinity='rbf', n_neighbors=10, gamma=0.5)
-        u = torch.from_numpy(spectral_embedding.fit_transform(X)).type(torch.FloatTensor)
+        
+        connectivity = kneighbors_graph(
+            X, n_neighbors=10, include_self=True, n_jobs=None
+        )
+        affinity_matrix_ = 0.5 * (connectivity + connectivity.T)
+        
+        spectralEmbedding = spectral_embedding(affinity_matrix_, n_components=self.n_components, eigen_solver='arpack', random_state=1, eigen_tol='auto', drop_first=False)
+        
+        u = torch.from_numpy(spectralEmbedding.fit_transform(X)).type(torch.FloatTensor)
         dataset = torch.utils.data.TensorDataset(x, u)
         # dataloader = torch.utils.data.DataLoader(dataset, batch_size = 50, shuffle = True) # kmeans, sc
         dataloader = torch.utils.data.DataLoader(dataset, batch_size = 40, shuffle = True) # PSC with rate=0.7, kmeans, sc
