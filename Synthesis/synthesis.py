@@ -10,7 +10,7 @@ from sklearn.neighbors import kneighbors_graph
 from sklearn.preprocessing import StandardScaler
 from itertools import cycle, islice
 
-from synthesis_psc import PSC, Four_layer_FNN
+from synthesis_psc import PSC, Four_layer_FNN, K_Means
 
 np.random.seed(0)
 
@@ -135,7 +135,8 @@ for i_dataset, (dataset, algo_params) in enumerate(datasets):
 
     model = Net(params['n_clusters'])
     kmeans = cluster.KMeans(n_clusters=params['n_clusters'], init='k-means++', n_init='auto', algorithm='elkan')
-    psc = PSC(model=model, clustering_method=kmeans, test_splitting_rate=0, n_neighbor=30, n_components=params['n_clusters'])
+    kmeans_psc = K_Means(params['n_clusters'])
+    psc = PSC(model=model, clustering_method=kmeans_psc, test_splitting_rate=0, n_neighbor=30, n_components=params['n_clusters'])
 
     clustering_algorithms = (
         ('KMeans', KMeans),

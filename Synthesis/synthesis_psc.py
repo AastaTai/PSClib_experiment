@@ -9,6 +9,7 @@ from sklearn.manifold import SpectralEmbedding, spectral_embedding
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import adjusted_mutual_info_score, adjusted_rand_score
 from sklearn.neighbors import kneighbors_graph
+from sklearn.preprocessing import StandardScaler
 from scipy import linalg
 from scipy.spatial.distance import cdist
 import random
@@ -16,6 +17,27 @@ import pickle
 import os
 import pandas as pd
 
+class K_Means():
+    def __init__(self, n_clusters) -> None:
+        self.n_clusters = n_clusters
+    def fit(self, X):
+        _, labels, _ = k_means(
+            X, n_clusters=self.n_clusters, random_state=1, n_init=10, verbose=False
+        )
+        self.labels = labels
+    def predict(self, X):
+        _, labels, _ = k_means(
+            X, n_clusters=self.n_clusters, random_state=1, n_init=10, verbose=False
+        )
+        self.labels = labels
+        return labels
+
+    def fit_predict(self, X):
+        _, labels, _ = k_means(
+            X, n_clusters=self.n_clusters, random_state=1, n_init=10, verbose=False
+        )
+        self.labels = labels
+        return labels
 
 class Four_layer_FNN(nn.Module):
     """The model used to learn the embedding.
@@ -319,7 +341,7 @@ class PSC:
         
         spectralEmbedding = spectral_embedding(affinity_matrix_, n_components=self.n_components, eigen_solver='arpack', random_state=1, eigen_tol='auto', drop_first=False)
         
-        u = torch.from_numpy(spectralEmbedding.fit_transform(X)).type(torch.FloatTensor)
+        u = torch.from_numpy(spectralEmbedding).type(torch.FloatTensor)
         dataset = torch.utils.data.TensorDataset(x, u)
         # dataloader = torch.utils.data.DataLoader(dataset, batch_size = 50, shuffle = True) # kmeans, sc
         dataloader = torch.utils.data.DataLoader(dataset, batch_size = 40, shuffle = True) # PSC with rate=0.7, kmeans, sc
@@ -364,6 +386,8 @@ class PSC:
         
         self.__check_clustering_method()
         self.__check_model()
+
+        X = StandardScaler().fit_transform(X)
 
         x = torch.from_numpy(X).type(torch.FloatTensor)
 
