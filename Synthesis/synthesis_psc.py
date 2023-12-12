@@ -21,23 +21,16 @@ class K_Means():
     def __init__(self, n_clusters) -> None:
         self.n_clusters = n_clusters
     def fit(self, X):
-        _, labels, _ = k_means(
+        _, labels_, _ = k_means(
             X, n_clusters=self.n_clusters, random_state=1, n_init=10, verbose=False
         )
-        self.labels = labels
+        self.labels_ = labels_
+        return self
     def predict(self, X):
-        _, labels, _ = k_means(
-            X, n_clusters=self.n_clusters, random_state=1, n_init=10, verbose=False
-        )
-        self.labels = labels
-        return labels
+        return self.labels_
 
     def fit_predict(self, X):
-        _, labels, _ = k_means(
-            X, n_clusters=self.n_clusters, random_state=1, n_init=10, verbose=False
-        )
-        self.labels = labels
-        return labels
+        return self.fit(X).labels_
 
 class Four_layer_FNN(nn.Module):
     """The model used to learn the embedding.
@@ -278,7 +271,8 @@ class PSC:
         epochs = 50,
         clustering_method = KMeans(n_clusters=10, init="k-means++", n_init=10, random_state=1),
         test_splitting_rate = 0.3,
-        n_components = 0
+        n_components = 0,
+        n_clusters=3
         ) -> None:
 
         self.n_neighbor = n_neighbor
@@ -289,7 +283,7 @@ class PSC:
         self.test_splitting_rate = test_splitting_rate
         self.optimizer = torch.optim.Adam(model.parameters(), lr = 0.001)
         self.n_components = n_components
-
+        self.n_clusters = n_clusters
         self.epochs = epochs
         self.clustering = clustering_method
         self.model_fitted = False
@@ -335,7 +329,7 @@ class PSC:
         # print("Start training")
         
         connectivity = kneighbors_graph(
-            X, n_neighbors=10, include_self=True, n_jobs=None
+            X, n_neighbors=self.n_neighbor, include_self=False
         )
         affinity_matrix_ = 0.5 * (connectivity + connectivity.T)
         
@@ -455,7 +449,10 @@ class PSC:
                 f"'{type(self.clustering)}' object has no attribute 'fit'"
             )
 
-        self.clustering.fit(U)
+        # self.clustering.fit(U)
+        _, self.labels_, _ = k_means(
+            U, n_clusters=self.n_clusters, random_state=1, n_init=10, verbose=False
+        )
 
         return self
 
