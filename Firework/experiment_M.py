@@ -13,7 +13,7 @@ import random
 import argparse
 import warnings
 
-# python Firework/experiments.py --methods kmeans psc sc --size 15000
+# python Firework\experiment_M.py --methods psc sc --size 15000
 
 warnings.filterwarnings("ignore")
 
@@ -87,26 +87,10 @@ if 'sc' in methods:
     f.write("ami: "+str(sc_ami)+'\n')
     f.write("time spent: " + str(end_time - start_time) + '\n\n')
 
-#--------kmeans--------
-if 'kmeans' in methods:
-    kmeans = KMeans(n_clusters=4, init='k-means++', n_init='auto', algorithm='elkan', random_state=rng)
-    start_time = round(time.time() * 1000)
-    kmeans_index = kmeans.fit_predict(x)
-    end_time = round(time.time() * 1000)
-    print("time spent:", end_time - start_time)
-    acc = Accuracy(y_true=y, y_pred=kmeans_index)
-    kmeans_accRate, kmeans_ari, kmeans_ami = acc.acc_report()
-    f.write("---------Kmeans---------\n")
-    f.write("acc rate: "+str(kmeans_accRate)+'\n')
-    f.write("ari: "+str(kmeans_ari)+'\n')
-    f.write("ami: "+str(kmeans_ami)+'\n')
-    f.write("time spent: " + str(end_time - start_time) + '\n\n')
-
 #--------Parametric Spectral Clustering--------
 if 'psc' in methods:
     model = Net()
     kmeans = KMeans(n_clusters=4, init='random', n_init='auto', algorithm='elkan', random_state=rng)
-    # psc = PSC(model=model, clustering_method=kmeans, test_splitting_rate=0, n_neighbor=4, batch_size_dataloader=args.size, batch_size_data=args.size)
     psc = PSC(model=model, clustering_method=kmeans, test_splitting_rate=0, n_components=4, n_neighbor=4, batch_size_data=args.size, random_state=rng)
     start_time = round(time.time() * 1000)
     psc_index = psc.fit_predict(x)
@@ -119,5 +103,71 @@ if 'psc' in methods:
     f.write("ari: "+str(psc_ari)+'\n')
     f.write("ami: "+str(psc_ami)+'\n')
     f.write("time spent: " + str(end_time - start_time) + '\n\n\n')
+
+#--------PSC predict--------
+    x_ = x_tmp[args.size:30000]
+    start_time = round(time.time() * 1000)
+    psc_index_30000 = psc.predict(x_)
+    end_time = round(time.time() * 1000)
+    print("time spent:", end_time - start_time)
+    acc = Accuracy(y_true=y_tmp[args.size:30000], y_pred=psc_index_30000)
+    psc_accRate, psc_ari, psc_ami = acc.acc_report()
+    f.write("----------PSC predict 15000~30000----------\n")
+    f.write("acc rate: "+str(psc_accRate)+'\n')
+    f.write("ari: "+str(psc_ari)+'\n')
+    f.write("ami: "+str(psc_ami)+'\n')
+    f.write("time spent: " + str(end_time - start_time) + '\n\n\n')
+    PSC_index = np.concatenate((psc_index, psc_index_30000))
+    acc = Accuracy(y_true=y_tmp[:30000], y_pred=PSC_index)
+    psc_accRate, psc_ari, psc_ami = acc.acc_report()
+    f.write("----------PSC predict 0~30000----------\n")
+    f.write("acc rate: "+str(psc_accRate)+'\n')
+    f.write("ari: "+str(psc_ari)+'\n')
+    f.write("ami: "+str(psc_ami)+'\n')
+    f.write("time spent: " + str(end_time - start_time) + '\n\n\n')
+
+    x_ = x_tmp[args.size:45000]
+    start_time = round(time.time() * 1000)
+    psc_index_45000 = psc.predict(x_)
+    end_time = round(time.time() * 1000)
+    print("time spent:", end_time - start_time)
+    acc = Accuracy(y_true=y_tmp[args.size:45000], y_pred=psc_index_45000)
+    psc_accRate, psc_ari, psc_ami = acc.acc_report()
+    f.write("----------PSC predict 15000~45000----------\n")
+    f.write("acc rate: "+str(psc_accRate)+'\n')
+    f.write("ari: "+str(psc_ari)+'\n')
+    f.write("ami: "+str(psc_ami)+'\n')
+    f.write("time spent: " + str(end_time - start_time) + '\n\n\n')
+    PSC_index = np.concatenate((psc_index, psc_index_45000))
+    acc = Accuracy(y_true=y_tmp[:45000], y_pred=PSC_index)
+    psc_accRate, psc_ari, psc_ami = acc.acc_report()
+    f.write("----------PSC predict 0~45000----------\n")
+    f.write("acc rate: "+str(psc_accRate)+'\n')
+    f.write("ari: "+str(psc_ari)+'\n')
+    f.write("ami: "+str(psc_ami)+'\n')
+    f.write("time spent: " + str(end_time - start_time) + '\n\n\n')
+
+
+    x_ = x_tmp[args.size:60000]
+    start_time = round(time.time() * 1000)
+    psc_index_60000 = psc.predict(x_)
+    end_time = round(time.time() * 1000)
+    print("time spent:", end_time - start_time)
+    acc = Accuracy(y_true=y_tmp[args.size:60000], y_pred=psc_index_60000)
+    psc_accRate, psc_ari, psc_ami = acc.acc_report()
+    f.write("----------PSC predict 15000~60000----------\n")
+    f.write("acc rate: "+str(psc_accRate)+'\n')
+    f.write("ari: "+str(psc_ari)+'\n')
+    f.write("ami: "+str(psc_ami)+'\n')
+    f.write("time spent: " + str(end_time - start_time) + '\n\n\n')
+    PSC_index = np.concatenate((psc_index, psc_index_60000))
+    acc = Accuracy(y_true=y_tmp[:60000], y_pred=PSC_index)
+    psc_accRate, psc_ari, psc_ami = acc.acc_report()
+    f.write("----------PSC predict 0~60000----------\n")
+    f.write("acc rate: "+str(psc_accRate)+'\n')
+    f.write("ari: "+str(psc_ari)+'\n')
+    f.write("ami: "+str(psc_ami)+'\n')
+    f.write("time spent: " + str(end_time - start_time) + '\n\n\n')
+
 f.close()
 
