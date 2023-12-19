@@ -1,17 +1,22 @@
 import time
 import warnings
-
+import torch
 import numpy as np
 import matplotlib.pyplot as plt
 import torch.nn as nn
-
+import random
 from sklearn import cluster, datasets, mixture
 from sklearn.neighbors import kneighbors_graph
 from sklearn.preprocessing import StandardScaler
 from itertools import cycle, islice
 
-from synthesis_psc import PSC, Four_layer_FNN, K_Means
+from synthesis_psc import PSC, Four_layer_FNN
 
+r = 72 # 72 for circles, 0 for moons
+print(r)
+rng = np.random.RandomState(r)
+torch.manual_seed(0)
+random.seed(int(r))
 np.random.seed(0)
 
 # ============
@@ -74,11 +79,11 @@ datasets = [
     (noisy_circles, {'damping': .77, 'preference': -240,
                      'quantile': .2, 'n_clusters': 2,
                      'min_samples': 20, 'xi': 0.25}),
-    # (noisy_moons, {'damping': .75, 'preference': -220, 'n_clusters': 2}),
+    (noisy_moons, {'damping': .75, 'preference': -220, 'n_clusters': 2}),
     # (varied, {'eps': .18, 'n_neighbors': 2,
     #           'min_samples': 5, 'xi': 0.035, 'min_cluster_size': .2}),
-    (aniso, {'eps': .15, 'n_neighbors': 2,
-             'min_samples': 20, 'xi': 0.1, 'min_cluster_size': .2}),
+    # (aniso, {'eps': .15, 'n_neighbors': 2,
+    #          'min_samples': 20, 'xi': 0.1, 'min_cluster_size': .2}),
     # (blobs, {}),
     # (no_structure, {})
     ]
@@ -135,8 +140,8 @@ for i_dataset, (dataset, algo_params) in enumerate(datasets):
 
     model = Net(params['n_clusters'])
     kmeans = cluster.KMeans(n_clusters=params['n_clusters'], init='k-means++', n_init='auto', algorithm='elkan')
-    kmeans_psc = K_Means(params['n_clusters'])
-    psc = PSC(model=model, clustering_method=kmeans_psc, test_splitting_rate=0, n_neighbor=30, n_components=params['n_clusters'], n_clusters=params['n_clusters'])
+    kmeans_psc = cluster.KMeans(n_clusters=params['n_clusters'], random_state=rng, n_init=10, verbose=False)
+    psc = PSC(model=model, clustering_method=kmeans_psc, test_splitting_rate=0, n_components=params['n_clusters'], n_neighbor=params['n_neighbors'], batch_size_data=10000, random_state=rng)
 
     clustering_algorithms = (
         ('KMeans', KMeans),

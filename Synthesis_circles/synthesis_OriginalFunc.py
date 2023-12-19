@@ -120,11 +120,12 @@ for i_dataset, (dataset, algo_params) in enumerate(datasets):
 
     model = Net(params['n_clusters'])
     kmeans = cluster.KMeans(n_clusters=params['n_clusters'], init='k-means++', n_init='auto', algorithm='elkan', random_state=rng)
-    psc = PSC(model=model, clustering_method=kmeans, test_splitting_rate=0, n_components=params['n_clusters'], n_neighbor=params['n_neighbors'], batch_size_data=10000, random_state=rng)
+    k_means = cluster.KMeans(n_clusters=params['n_clusters'], random_state=rng, n_init=10, verbose=False)
+    psc = PSC(model=model, clustering_method=k_means, test_splitting_rate=0, n_components=params['n_clusters'], n_neighbor=params['n_neighbors'], batch_size_data=10000, random_state=rng)
 
     clustering_algorithms = (
-        # ('KMeans', KMeans),
-        ('SpectralClustering', spectral),
+        ('KMeans', KMeans),
+        # ('SpectralClustering', spectral),
         ('ParametricSpectralClustering', psc)
     )
 

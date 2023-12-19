@@ -13,7 +13,6 @@ import random
 import pickle
 import os
 
-
 class Four_layer_FNN(nn.Module):
     """The model used to learn the embedding.
 
@@ -311,7 +310,7 @@ class PSC:
         self.batch_size_data = batch_size_data
         self.batch_size_dataloader = batch_size_dataloader
 
-        # self.labels_ = []
+        self.labels_ = []
 
     def __loss_calculation(self):
         running_loss = 0.0
