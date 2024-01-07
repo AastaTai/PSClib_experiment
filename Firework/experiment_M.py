@@ -49,13 +49,13 @@ class Net(nn.Module):
         return x
 
 
-df = pd.read_csv('Firework/firework.csv')
+df = pd.read_csv('firework.csv')
 action = {'allow': 1, 'deny': 2, 'drop': 3, 'reset-both': 4}
 df['Action'] = df['Action'].map(action)
 y_tmp = df['Action'].values
 x_tmp = df.drop(['Action'], axis = 1).values
 
-f = open('Firework/log.txt', 'a+')
+f = open('log.txt', 'a+')
 now = str(datetime.datetime.now())
 f.write("======"+ now+ '======\n')
 

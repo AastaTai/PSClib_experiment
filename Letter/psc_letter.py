@@ -4,22 +4,19 @@ from scipy.optimize import linear_sum_assignment
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from sklearn.cluster import KMeans
-from sklearn.manifold import SpectralEmbedding
+from sklearn.cluster import KMeans, k_means
+from sklearn.manifold import SpectralEmbedding, spectral_embedding
+from sklearn.neighbors import kneighbors_graph
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import adjusted_mutual_info_score, adjusted_rand_score
-from scipy import linalg
-from scipy.spatial.distance import cdist
 import random
 import pickle
 import os
-import pandas as pd
-import matplotlib.pyplot as plt
 
 
 class Four_layer_FNN(nn.Module):
     """The model used to learn the embedding.
-    
+
     Parameters
     ----------
     n_feature : int
@@ -32,7 +29,7 @@ class Four_layer_FNN(nn.Module):
         The number of neurons in the third hidden layer.
     n_output : int
         The number of output features.
-    
+
     Attributes
     ----------
     hidden1 : torch.nn.Linear
@@ -43,7 +40,7 @@ class Four_layer_FNN(nn.Module):
         The third hidden layer.
     predict : torch.nn.Linear
         The output layer.
-    
+
     Examples
     --------
     >>> model = Four_layer_FNN(64, 128, 256, 64, 10)
@@ -55,21 +52,22 @@ class Four_layer_FNN(nn.Module):
         (predict): Linear(in_features=64, out_features=10, bias=True)
     )
     """
+
     def __init__(self, n_feature, n_hidden1, n_hidden2, n_hidden3, n_output):
         super().__init__()
         self.hidden1 = nn.Linear(n_feature, n_hidden1)
         self.hidden2 = nn.Linear(n_hidden1, n_hidden2)
         self.hidden3 = nn.Linear(n_hidden2, n_hidden3)
         self.predict = nn.Linear(n_hidden3, n_output)
-        
+
     def forward(self, x):
         """Forward propagation.
-        
+
         Parameters
         ----------
         x : torch.Tensor
             The input tensor.
-        
+
         Returns
         -------
         x : torch.Tensor
@@ -91,17 +89,17 @@ class Accuracy:
         True labels.
     y_pred : list
         Predicted labels.
-    
+
     Attributes
     ----------
     y_true : list
         True labels.
     y_pred : list
         Predicted labels.
-    
+
     Examples
     --------
-    >>> from ParametricSpectralClustering import import Accuracy
+    >>> from ParametricSpectralClustering import Accuracy
     >>> from sklearn.datasets import load_digits
     >>> from sklearn.cluster import KMeans
     >>> digits = load_digits()
@@ -114,10 +112,11 @@ class Accuracy:
     Adjusted rand index: 0.670943009820327
     Adjusted mutual information: 0.7481788599584174
     """
+
     def __init__(self, y_true, y_pred):
         self.y_true = y_true
         self.y_pred = y_pred
-    
+
     def cluster_acc(self):
         """Calculate the clustering accuracy.
 
@@ -125,6 +124,11 @@ class Accuracy:
         ----------
         self : object
             The instance itself.
+
+        Returns
+        -------
+        acc : float
+            The clustering accuracy.
         """
         self.y_true = self.y_true.astype(np.int64)
         assert self.y_pred.size == self.y_true.size
@@ -137,11 +141,16 @@ class Accuracy:
 
     def ARI(self):
         """Calculate the adjusted rand index.
-        
+
         Parameters
         ----------
         self : object
             The instance itself.
+
+        Returns
+        -------
+        ari : float
+            The adjusted rand index.
         """
         return adjusted_rand_score(self.y_true, self.y_pred)
 
@@ -152,6 +161,11 @@ class Accuracy:
         ----------
         self : object
             The instance itself.
+
+        Returns
+        -------
+        ami : float
+            The adjusted mutual information.
         """
         return adjusted_mutual_info_score(self.y_true, self.y_pred)
 
@@ -162,6 +176,15 @@ class Accuracy:
         ----------
         self : object
             The instance itself.
+
+        Returns
+        -------
+        clusterAcc : float
+            The clustering accuracy.
+        ari : float
+            The adjusted rand index.
+        ami : float
+            The adjusted mutual information.
         """
         clusterAcc = self.cluster_acc()
         ari = self.ARI()
@@ -193,8 +216,12 @@ class PSC:
     clustering_method : sklearn.cluster, default=None
         The clustering method used to cluster the embedding.
     spliting_rate : float, default=0.3
-        The spliting rate of the training data.
-    
+        The spliting rate of the testing data.
+    batch_size_data : int, default=50
+        The batch size of the training data.
+    batch_size_dataloader : int, default=20
+        The batch size of the dataloader.
+
     Attributes
     ----------
     n_neighbor : int
@@ -208,7 +235,7 @@ class PSC:
     criterion : torch.nn.modules.loss
         The loss function used to train the model.
     test_splitting_rate : float
-        The spliting rate of the training data.
+        The spliting rate of the testing data.
     optimizer : torch.optim
         The optimizer used to train the model.
     epochs : int
@@ -219,23 +246,26 @@ class PSC:
         Whether the model has been fitted.
     dataloader : torch.utils.data.DataLoader
         The dataloader used to train the model.
+    batch_size_data : int
+        The batch size of the training data.
+    batch_size_dataloader : int
+        The batch size of the dataloader.
 
     Examples
     --------
-    >>> from PSC_lib import PSC, Four_layer_FNN
+    >>> from ParametricSpectralClustering import PSC, Four_layer_FNN
     >>> from sklearn.datasets import load_digits
     >>> from sklearn.cluster import KMeans
     >>> digits = load_digits()
     >>> X = digits.data/16
     >>> cluster_method = KMeans(n_clusters=10, init="k-means++", n_init=1, max_iter=100, algorithm='elkan')
     >>> model = Four_layer_FNN(64, 128, 256, 64, 10)
-    >>> psc = PSC(model=model, clustering_method=cluster_method)
+    >>> psc = PSC(model=model, clustering_method=cluster_method, n_neighbor=10, test_splitting_rate=0, batch_size_data=1797)
     >>> psc.fit(X)
-    Start training
     >>> psc.save_model("model")
     >>> cluster_idx = psc.predict(X)
 
-    >>> from PSC_lib import PSC, Four_layer_FNN
+    >>> from ParametricSpectralClustering import PSC, Four_layer_FNN
     >>> from sklearn.datasets import load_digits
     >>> from sklearn.cluster import KMeans
     >>> digits = load_digits()
@@ -246,49 +276,40 @@ class PSC:
     >>> psc.load_model("model")
     >>> cluster_idx = psc.predict(X)
     """
-    def __init__(
-        self, 
-        n_neighbor = 8, 
-        sigma = 1, 
-        k = 10, 
-        model = Four_layer_FNN(64, 128, 256, 64, 10),
-        criterion = nn.MSELoss(),
-        epochs = 50,
-        clustering_method = KMeans(n_clusters=10, init="k-means++", n_init=1, max_iter=100, algorithm='elkan'),
-        test_splitting_rate = 0.3
-        ) -> None:
 
+    def __init__(
+        self,
+        n_neighbor=8,
+        sigma=1,
+        k=10,
+        model=Four_layer_FNN(64, 128, 256, 64, 10),
+        criterion=nn.MSELoss(),
+        epochs=50,
+        clustering_method=KMeans(
+            n_clusters=10, init="k-means++", n_init=1, max_iter=100, algorithm="elkan"
+        ),
+        test_splitting_rate=0.3,
+        batch_size_data=50,
+        batch_size_dataloader=20,
+        n_components = 0,
+        random_state = 0,
+    ) -> None:
         self.n_neighbor = n_neighbor
         self.sigma = sigma
         self.k = k
         self.model = model
         self.criterion = criterion
         self.test_splitting_rate = test_splitting_rate
-        self.optimizer = torch.optim.Adam(model.parameters(), lr = 0.001)
+        self.optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+        self.n_components = n_components
+        self.random = random_state
 
         self.epochs = epochs
         self.clustering = clustering_method
         self.model_fitted = False
 
-    # input 轉換成做kmeans之前的matrix
-    def __matrix_before_psc(self, X):
-        dist  = cdist(X, X, "euclidean")
-        S = np.zeros(dist.shape)
-        neighbor_index = np.argsort(dist, axis = 1)[:, 1:self.n_neighbor + 1]
-
-        for i in range(X.shape[0]):
-            S[i, neighbor_index[i]] = np.exp(-dist[i, neighbor_index[i]] / (2 * self.sigma ** 2))
-
-        S = np.maximum(S, S.T)
-        D = np.diag(np.sum(S, axis = 1))
-        L = D - S
-        D_tmp = np.linalg.inv(D) ** (1 / 2)
-        L_sym = np.dot(np.dot(D_tmp, L), D_tmp)
-        A,B=np.linalg.eig(L_sym)
-        idx=np.argsort(A)[:self.k]
-        U=B[:,idx]
-        U=U/((np.sum(U**2,axis=1)**0.5)[:,None])
-        return U
+        self.batch_size_data = batch_size_data
+        self.batch_size_dataloader = batch_size_dataloader
 
 
     def __loss_calculation(self):
@@ -306,71 +327,81 @@ class PSC:
 
     def __train_model(self, X, x):
         self.model_fitted = True
-        # print("Start training")
-        spectral_embedding = SpectralEmbedding(n_components=26, affinity='nearest_neighbors', n_neighbors=self.n_neighbor, eigen_solver='arpack')
-        u = torch.from_numpy(spectral_embedding.fit_transform(X)).type(torch.FloatTensor)
+        connectivity = kneighbors_graph(
+            X, n_neighbors=self.n_neighbor, include_self=False)
+        affinity_matrix_ = 0.5 * (connectivity + connectivity.T)
+        embedding = spectral_embedding(
+            affinity_matrix_,
+            n_components=self.n_components,
+            eigen_solver='arpack',
+            random_state=1,
+            eigen_tol='auto',
+            drop_first=False
+        )
+
+        u = torch.from_numpy(embedding).type(torch.FloatTensor)
         dataset = torch.utils.data.TensorDataset(x, u)
-        # dataloader = torch.utils.data.DataLoader(dataset, batch_size = 50, shuffle = True) # kmeans, sc (Fashion_MNIST)
-        dataloader = torch.utils.data.DataLoader(dataset, batch_size = 20, shuffle = True) # PSC with rate=0.7, kmeans, sc (Fashion_MNIST, Firework(works))
+        dataloader = torch.utils.data.DataLoader(
+            dataset, batch_size=self.batch_size_dataloader, shuffle=True
+        )
         self.dataloader = dataloader
         total_loss = 0
-        for i in range(self.epochs):
+        for _ in range(self.epochs):
             loss = self.__loss_calculation()
             total_loss += loss
-        return total_loss/self.epochs
+        return total_loss / self.epochs
 
     def __check_file_exist(self, file_name) -> bool:
-        for entry in os.listdir('./'):
+        for entry in os.listdir("./"):
             if entry == file_name:
                 return True
         return False
 
     def __check_clustering_method(self) -> None:
         if self.clustering is None:
-            raise ValueError(
-                "No clustering method assigned."
-            )
+            raise ValueError("No clustering method assigned.")
 
     def __check_model(self) -> None:
         if self.model is None:
-            raise ValueError(
-                "No model assigned."
-            )
+            raise ValueError("No model assigned.")
 
     def training_psc_model(self, X):
         """Train the model and return the embedding.
-        
+
         Parameters
         ----------
         X : array-like of shape
             Training data.
-        
+
         Returns
         -------
         U : array-like of shape
             The embedding of the training data.
         """
-        
+
         self.__check_clustering_method()
         self.__check_model()
 
         x = torch.from_numpy(X).type(torch.FloatTensor)
 
-        # print("shape of x: ", x.shape)
-        if self.test_splitting_rate == 1:
+        if self.test_splitting_rate >= 1 or self.test_splitting_rate < 0:
             raise AttributeError(
-                f"'test_spliting_rate' should be less than 1 and not less than 0."
+                f"'test_spliting_rate' should be not less than 0 and less than 1."
             )
 
         if self.test_splitting_rate == 0:
             X_train, x_train = X, x
-        
-        else:
-            X_train, _, x_train, __ = train_test_split(
-                X, x, test_size=self.test_splitting_rate, random_state=random.randint(1, 100)) 
 
-        # Define batch size
-        batch_size = 50         # (for works) 20 no warning, 50 warning; (for improve net) 100 warning
+        else:
+            X_train, _, x_train, _ = train_test_split(
+                X,
+                x,
+                test_size=self.test_splitting_rate,
+                random_state=self.random,
+                # random_state=random.randint(1, 100),
+            )
+
+        batch_size = self.batch_size_data
         total_loss = 0
         i = 1
         # Train the model in mini-batches
@@ -386,8 +417,6 @@ class PSC:
             i += 1
 
         U = self.model(x).detach().numpy()
-        # print("loss:", total_loss)
-        # print("x_train len:", len(X_train))
 
         return U
 
@@ -402,10 +431,10 @@ class PSC:
         Returns
         -------
         self : object
-            Returns the instance itself.        
+            Returns the instance itself.
         """
         U = self.training_psc_model(X)
-        
+
         if hasattr(self.clustering, "fit") is False:
             raise AttributeError(
                 f"'{type(self.clustering)}' object has no attribute 'fit'"
@@ -420,7 +449,7 @@ class PSC:
         ----------
         X : array-like of shape (n_samples, n_features)
             Training data.
-        
+
         Returns
         -------
         cluster_index : array-like of shape (n_samples,)
@@ -443,7 +472,7 @@ class PSC:
         ----------
         X : array-like of shape (n_samples, n_features)
             New data.
-        
+
         Returns
         -------
         cluster_index : array-like of shape (n_samples,)
@@ -461,16 +490,16 @@ class PSC:
             return self.clustering.fit_predict(U)
 
         return self.clustering.predict(U)
-        
+
     def set_model(self, self_defined_model) -> None:
         """Set the model to a self-defined model.
-        
+
         Parameters
         ----------
         self_defined_model : torch.nn.Module
             The self-defined model.
         """
-        
+
         self.model = self_defined_model
 
     def save_model(self, path: str) -> None:
@@ -483,7 +512,7 @@ class PSC:
         """
         torch.save(self.model.state_dict(), path)
 
-        with open(path, 'wb') as f:
+        with open(path, "wb") as f:
             pickle.dump(self.model, f)
 
     def load_model(self, path: str) -> None:
@@ -495,9 +524,7 @@ class PSC:
             The path of the file.
         """
         if self.__check_file_exist(path) is False:
-            raise FileNotFoundError(
-                f"No such file or directory: '{path}'"
-            )
-        
-        with open(path, 'rb') as f:
-                self.model = pickle.load(f)
+            raise FileNotFoundError(f"No such file or directory: '{path}'")
+
+        with open(path, "rb") as f:
+            self.model = pickle.load(f)
