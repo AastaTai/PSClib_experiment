@@ -1,7 +1,7 @@
 #!/bin/bash
 set -ex
 
-for data in 10000 30000 50000 -1
+for data in 15000 30000 45000
 do
-    python experiments.py --methods kmeans psc --size ${data}
+    python exp_jss.py --methods kmeans psc --size ${data}
 done
