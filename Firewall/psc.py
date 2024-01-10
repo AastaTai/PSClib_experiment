@@ -291,7 +291,7 @@ class PSC:
         test_splitting_rate=0.3,
         batch_size_data=50,
         batch_size_dataloader=20,
-        n_components = 2,
+        n_components = 0,
         random_state = 0,
     ) -> None:
         self.n_neighbor = n_neighbor
