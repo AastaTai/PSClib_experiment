@@ -13,7 +13,6 @@ from itertools import cycle, islice
 from psc import PSC, Four_layer_FNN
 
 r = 72
-print(r)
 rng = np.random.RandomState(r)
 torch.manual_seed(0)
 random.seed(int(r))
