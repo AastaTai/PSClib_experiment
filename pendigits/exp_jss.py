@@ -11,6 +11,7 @@ import warnings
 # python pendigits/experiments.py --methods kmeans psc --size ${data}
 
 warnings.filterwarnings("ignore")
+
 parser = argparse.ArgumentParser()
 parser.add_argument("-datasize", "--size", type=int, help="data size used for training")
 parser.add_argument("-methods", "--methods", nargs="+", help="which method to test")
@@ -80,13 +81,6 @@ for i in range(10):
         f.write("ari: " + str(sc_ari) + "\n")
         f.write("ami: " + str(sc_ami) + "\n")
         f.write("time spent: " + str(end_time - start_time) + "\n\n")
-        data.loc[len(data)] = [
-            "Spectral Clustering",
-            sc_accRate,
-            sc_ari,
-            sc_ami,
-            end_time - start_time,
-        ]
 
     # --------kmeans--------
     if "kmeans" in methods:
@@ -102,13 +96,6 @@ for i in range(10):
         f.write("ari: " + str(kmeans_ari) + "\n")
         f.write("ami: " + str(kmeans_ami) + "\n")
         f.write("time spent: " + str(end_time - start_time) + "\n\n")
-        data.loc[len(data)] = [
-            "Kmeans",
-            kmeans_accRate,
-            kmeans_ari,
-            kmeans_ami,
-            end_time - start_time,
-        ]
 
     # --------Parametric Spectral Clustering--------
     if "psc" in methods:
@@ -133,14 +120,4 @@ for i in range(10):
         f.write("ari: " + str(psc_ari) + "\n")
         f.write("ami: " + str(psc_ami) + "\n")
         f.write("time spent: " + str(end_time - start_time) + "\n\n\n")
-        data.loc[len(data)] = [
-            "PSC",
-            psc_accRate,
-            psc_ari,
-            psc_ami,
-            end_time - start_time,
-        ]
-
-print(data)
-data.to_csv("pendigits/Pendigits.csv", index=False)
 f.close()
