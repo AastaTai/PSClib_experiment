@@ -45,7 +45,7 @@ varied = datasets.make_blobs(
 # ============
 # Set up cluster parameters
 # ============
-plt.figure(figsize=(7.5, 15))
+plt.figure(figsize=(7.5, 7.5))
 plt.subplots_adjust(
     left=0.02, right=0.98, bottom=0.001, top=0.96, wspace=0.05, hspace=0.01
 )
@@ -57,15 +57,11 @@ default_base = {
     "eps": 0.3,
     "damping": 0.9,
     "preference": -200,
-    "n_neighbors": 3,
+    "n_neighbors": 10,
     "n_clusters": 3,
-    "min_samples": 7,
+    "min_samples": 20,
     "xi": 0.05,
     "min_cluster_size": 0.1,
-    "allow_single_cluster": True,
-    "hdbscan_min_cluster_size": 15,
-    "hdbscan_min_samples": 3,
-    "random_state": 42,
 }
 
 datasets = [
@@ -211,7 +207,6 @@ for i_dataset, (name, dataset, algo_params) in enumerate(datasets):
         n_clusters=params["n_clusters"],
         eigen_solver="arpack",
         affinity="nearest_neighbors",
-        random_state=params["random_state"],
     )
 
     model_1 = Net1(params["n_clusters"])
@@ -310,5 +305,5 @@ for i_dataset, (name, dataset, algo_params) in enumerate(datasets):
         #          transform=plt.gca().transAxes, size=12,
         #          horizontalalignment='right')
         plot_num += 1
-
+plt.savefig("synthesis.pdf", format="pdf", bbox_inches="tight")
 plt.show()
