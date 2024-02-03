@@ -55,13 +55,13 @@ class Net(nn.Module):
         return x
 
 
-df = pd.read_csv('Firewall/firewall.csv')
+df = pd.read_csv('firewall.csv')
 action = {'allow': 1, 'deny': 2, 'drop': 3, 'reset-both': 4}
 df['Action'] = df['Action'].map(action)
 y_tmp = df['Action'].values
 x_tmp = df.drop(['Action'], axis = 1).values
 
-f = open('Firewall/log.txt', 'a+')
+f = open('log.txt', 'a+')
 now = str(datetime.datetime.now())
 f.write("======"+ now+ '======\n')
 
@@ -76,7 +76,6 @@ else:
 scaler = sklearn.preprocessing.StandardScaler().fit(x_data)
 x = scaler.transform(x_data)
 methods = args.methods
-
 data = pd.read_csv('Firewall/Firewall_N.csv')
 
 for i in range(10):

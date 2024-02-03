@@ -49,13 +49,13 @@ class Net(nn.Module):
         return x
 
 
-df = pd.read_csv('Firewall/firewall.csv')
+df = pd.read_csv('firewall.csv')
 action = {'allow': 1, 'deny': 2, 'drop': 3, 'reset-both': 4}
 df['Action'] = df['Action'].map(action)
 y_tmp = df['Action'].values
 x_tmp = df.drop(['Action'], axis = 1).values
 
-f = open('Firewall/log.txt', 'a+')
+f = open('log.txt', 'a+')
 now = str(datetime.datetime.now())
 f.write("======"+ now+ '======\n')
 
@@ -187,5 +187,6 @@ for i in range(10):
         data.loc[len(data)] = ['PSC predict', '0~60000', psc_accRate, psc_ari, psc_ami, end_time-start_time]
 print(data)
 data.to_csv('Firewall/Firewall_M.csv', index=False)
+
 f.close()
 
