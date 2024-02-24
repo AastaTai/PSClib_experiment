@@ -10,7 +10,7 @@ from sklearn.neighbors import kneighbors_graph
 from sklearn.preprocessing import StandardScaler
 from itertools import cycle, islice
 
-from psc import PSC, Four_layer_FNN
+from psc import PSC
 
 r = 72
 rng = np.random.RandomState(r)
@@ -23,10 +23,12 @@ np.random.seed(0)
 # of the algorithms, but not too big to avoid too long running times
 # ============
 n_samples = 10000
-noisy_circles = datasets.make_circles(n_samples=n_samples, factor=0.5, noise=0.05)
+noisy_circles = datasets.make_circles(
+    n_samples=n_samples, factor=0.5, noise=0.05, random_state=rng
+)
 x, y = noisy_circles
 print(x.shape)
-noisy_moons = datasets.make_moons(n_samples=n_samples, noise=0.05)
+noisy_moons = datasets.make_moons(n_samples=n_samples, noise=0.05, random_state=rng)
 blobs = datasets.make_blobs(n_samples=n_samples, random_state=8)
 no_structure = np.random.rand(n_samples, 2), None
 
@@ -201,16 +203,23 @@ for i_dataset, (name, dataset, algo_params) in enumerate(datasets):
     # Create cluster objects
     # ============
     KMeans = cluster.KMeans(
-        n_clusters=params["n_clusters"], init="random", n_init="auto", algorithm="elkan"
+        n_clusters=params["n_clusters"],
+        init="random",
+        n_init="auto",
+        algorithm="elkan",
+        random_state=rng,
     )
     spectral = cluster.SpectralClustering(
         n_clusters=params["n_clusters"],
         eigen_solver="arpack",
         affinity="nearest_neighbors",
+        random_state=rng,
     )
-
+    torch.manual_seed(0)
     model_1 = Net1(params["n_clusters"])
+    torch.manual_seed(0)
     model_2 = Net2(params["n_clusters"])
+    torch.manual_seed(0)
     model_3 = Net3(params["n_clusters"])
     kmeans_psc = cluster.KMeans(
         n_clusters=params["n_clusters"], random_state=rng, n_init=10, verbose=False
@@ -230,7 +239,7 @@ for i_dataset, (name, dataset, algo_params) in enumerate(datasets):
     psc = PSC(
         model=model,
         clustering_method=kmeans_psc,
-        test_splitting_rate=0,
+        sampling_ratio=0,
         n_components=params["n_clusters"],
         n_neighbor=params["n_neighbors"],
         batch_size_data=10000,
@@ -243,7 +252,7 @@ for i_dataset, (name, dataset, algo_params) in enumerate(datasets):
         ("PSC", psc),
     )
 
-    for name, algorithm in clustering_algorithms:
+    for algo_name, algorithm in clustering_algorithms:
         t0 = time.time()
 
         # catch warnings related to kneighbors_graph
@@ -269,9 +278,13 @@ for i_dataset, (name, dataset, algo_params) in enumerate(datasets):
         else:
             y_pred = algorithm.predict(X)
 
+        if algo_name == "PSC":
+            path = "JSS_Experiments/Synthesis_dataset/" + str(name) + "2.pth"
+            algorithm.save_model(path=path)
+
         plt.subplot(len(datasets), len(clustering_algorithms), plot_num)
         if i_dataset == 0:
-            plt.title(name, size=10)
+            plt.title(algo_name, size=10)
 
         colors = np.array(
             list(

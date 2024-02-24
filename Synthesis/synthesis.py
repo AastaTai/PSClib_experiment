@@ -214,9 +214,11 @@ for i_dataset, (name, dataset, algo_params) in enumerate(datasets):
         affinity="nearest_neighbors",
         random_state=params["random_state"],
     )
-
+    torch.manual_seed(0)
     model_1 = Net1(params["n_clusters"])
+    torch.manual_seed(0)
     model_2 = Net2(params["n_clusters"])
+    torch.manual_seed(0)
     model_3 = Net3(params["n_clusters"])
     kmeans_psc = cluster.KMeans(
         n_clusters=params["n_clusters"], random_state=rng, n_init=10, verbose=False
